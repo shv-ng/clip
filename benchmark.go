@@ -21,7 +21,9 @@ func RunBenchmark(file string) error {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		url := scanner.Text()
-		fmt.Println(url)
+		shorted := Shortit(url)
+		d := Diff(url, shorted)
+		data = append(data, d)
 	}
 
 	if err := scanner.Err(); err != nil {
