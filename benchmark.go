@@ -1,41 +1,32 @@
-package main
+package clip
 
 import (
-	"flag"
+	"bufio"
 	"fmt"
 	"os"
 	"sort"
 	"text/tabwriter"
 )
 
-func main() {
-	serverPtr := flag.Bool("server", false, "start the server")
-	benchmarkPtr := flag.Bool("benchmark", false, "run benchmark on a file")
-	filePtr := flag.String("file", "", "path to file contain url, one url in one line")
-
-	flag.Parse()
-
-	if *serverPtr {
-		// TODO: make a http server for our shortner
-		fmt.Println("server: server isn't setup yet")
-		return
-	}
-
-	if *benchmarkPtr {
-		if *filePtr == "" {
-			fmt.Println("-file is required when use -benchmark")
-			os.Exit(1)
-		}
-		runBenchmark(*filePtr)
-		return
-	}
-
-	flag.Usage()
-}
-
-func runBenchmark(file string) {
+func RunBenchmark(file string) error {
 	var s StatResult
-	var data []float64 = []float64{2.4, 43.5}
+	var data []float64
+
+	f, err := os.Open(file)
+	if err != nil {
+		return fmt.Errorf(": %w", err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		url := scanner.Text()
+		fmt.Println(url)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
 
 	s.P50 = percentile(data, 50)
 	s.P90 = percentile(data, 90)
@@ -69,6 +60,7 @@ func runBenchmark(file string) {
 	fmt.Fprintf(w, "URLs shortened > 50%%\t: %.2f%%\n", s.GT50)
 	w.Flush()
 
+	return nil
 }
 
 func percentile(data []float64, p float64) float64 {
